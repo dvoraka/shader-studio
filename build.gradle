@@ -1,0 +1,17 @@
+apply plugin: 'java'
+
+sourceCompatibility = '1.8'
+targetCompatibility = '1.8'
+version = '0.1-SNAPSHOT'
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    compile('org.jogamp.jogl:jogl-all:2.3.2')
+}
+
+task wrapper(type: Wrapper) {
+    gradleVersion = '2.8'
+}
