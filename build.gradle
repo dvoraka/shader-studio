@@ -15,3 +15,8 @@ dependencies {
 task wrapper(type: Wrapper) {
     gradleVersion = '2.8'
 }
+
+task run(type: JavaExec) {
+    main = 'dvoraka.shaderstudio.App'
+    classpath = sourceSets.main.runtimeClasspath
+}
