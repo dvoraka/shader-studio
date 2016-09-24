@@ -9,6 +9,15 @@ import com.jogamp.opengl.GLAutoDrawable;
 import com.jogamp.opengl.GLCapabilities;
 import com.jogamp.opengl.GLEventListener;
 import com.jogamp.opengl.GLProfile;
+import com.jogamp.opengl.util.Animator;
+import com.jogamp.opengl.util.GLBuffers;
+import dvoraka.shaderstudio.examples.framework.BufferUtils;
+
+import java.nio.FloatBuffer;
+import java.nio.IntBuffer;
+import java.nio.ShortBuffer;
+
+import static com.jogamp.opengl.GL.*;
 
 /**
  * JOGL test App.
@@ -39,13 +48,60 @@ public class App implements GLEventListener {
         glWindow.setTitle("App");
 
         glWindow.addGLEventListener(this);
-
         glWindow.setVisible(true);
+
+        Animator animator = new Animator(glWindow);
+        animator.start();
+    }
+
+    private static class Buffer {
+        public static final int VERTEX = 0;
+        public static final int ELEMENT = 1;
+        public static final int TRANSFORM = 2;
+        public static final int MAX = 3;
+    }
+
+    private void initBuffers(GL3 gl3) {
+
+        int vertexCount = 3;
+        int vertexSize = vertexCount * 5 * Float.BYTES;
+        float[] vertexData = new float[]{
+                -1, -1,/**/ 1, 0, 0,
+                +0, +2,/**/ 0, 0, 1,
+                +1, -1,/**/ 0, 1, 0
+        };
+
+        int elementCount = 3;
+        int elementSize = elementCount * Short.BYTES;
+        short[] elementData = new short[]{
+                0, 2, 1
+        };
+
+        IntBuffer bufferName = GLBuffers.newDirectIntBuffer(Buffer.MAX);
+
+        FloatBuffer vertexBuffer = GLBuffers.newDirectFloatBuffer(vertexData);
+        ShortBuffer elementBuffer = GLBuffers.newDirectShortBuffer(elementData);
+
+        gl3.glGenBuffers(Buffer.MAX, bufferName);
+        gl3.glBindBuffer(GL_ARRAY_BUFFER, bufferName.get(Buffer.VERTEX));
+        gl3.glBufferData(GL_ARRAY_BUFFER, vertexSize, vertexBuffer, GL_STATIC_DRAW);
+        gl3.glBindBuffer(GL_ARRAY_BUFFER, 0);
+
+        gl3.glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, bufferName.get(Buffer.ELEMENT));
+        gl3.glBufferData(GL_ELEMENT_ARRAY_BUFFER, elementSize, elementBuffer, GL_STATIC_DRAW);
+        gl3.glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+
+        BufferUtils.destroyDirectBuffer(vertexBuffer);
+        BufferUtils.destroyDirectBuffer(elementBuffer);
     }
 
     @Override
     public void init(GLAutoDrawable drawable) {
         System.out.println("Init");
+
+        GL3 gl3 = drawable.getGL().getGL3();
+
+        initBuffers(gl3);
     }
 
     @Override
@@ -56,10 +112,10 @@ public class App implements GLEventListener {
 
     @Override
     public void display(GLAutoDrawable drawable) {
-        System.out.println("Display");
+//        System.out.println("Display");
 
         GL3 gl3 = drawable.getGL().getGL3();
-        System.out.println(gl3.glGetError());
+//        System.out.println(gl3.glGetError());
     }
 
     @Override
