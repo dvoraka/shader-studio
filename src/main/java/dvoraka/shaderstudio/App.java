@@ -111,7 +111,7 @@ public class App implements GLEventListener {
 
     private void initVertexArray(GL3 gl3) {
 
-        IntBuffer vertexArrayName = GLBuffers.newDirectIntBuffer(1);
+        vertexArrayName = GLBuffers.newDirectIntBuffer(1);
         gl3.glGenVertexArrays(1, vertexArrayName);
 
         gl3.glBindVertexArray(vertexArrayName.get(0));
@@ -217,7 +217,8 @@ public class App implements GLEventListener {
         gl3.glBindVertexArray(vertexArrayName.get(0));
 
         gl3.glUniformMatrix4fv(modelToClipMatrixUL, 1, false, modelToClip, 0);
-        gl3.glDrawElements(GL_TRIANGLES, elementSize, GL_UNSIGNED_SHORT, 0);
+//        gl3.glDrawElements(GL_TRIANGLES, elementSize, GL_UNSIGNED_SHORT, 0);
+        gl3.glDrawArrays(GL_TRIANGLES, 0, 3);
 
         gl3.glBindVertexArray(0);
         gl3.glUseProgram(0);
