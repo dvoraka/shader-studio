@@ -12,6 +12,7 @@ import com.jogamp.opengl.GLProfile;
 import com.jogamp.opengl.util.Animator;
 import com.jogamp.opengl.util.GLBuffers;
 import dvoraka.shaderstudio.examples.framework.BufferUtils;
+import dvoraka.shaderstudio.examples.framework.Semantic;
 
 import java.nio.FloatBuffer;
 import java.nio.IntBuffer;
@@ -23,6 +24,9 @@ import static com.jogamp.opengl.GL.*;
  * JOGL test App.
  */
 public class App implements GLEventListener {
+
+    private IntBuffer bufferName = GLBuffers.newDirectIntBuffer(Buffer.MAX);
+
 
     public static void main(String[] args) {
         App testApp = new App();
@@ -77,12 +81,11 @@ public class App implements GLEventListener {
                 0, 2, 1
         };
 
-        IntBuffer bufferName = GLBuffers.newDirectIntBuffer(Buffer.MAX);
-
         FloatBuffer vertexBuffer = GLBuffers.newDirectFloatBuffer(vertexData);
         ShortBuffer elementBuffer = GLBuffers.newDirectShortBuffer(elementData);
 
         gl3.glGenBuffers(Buffer.MAX, bufferName);
+
         gl3.glBindBuffer(GL_ARRAY_BUFFER, bufferName.get(Buffer.VERTEX));
         gl3.glBufferData(GL_ARRAY_BUFFER, vertexSize, vertexBuffer, GL_STATIC_DRAW);
         gl3.glBindBuffer(GL_ARRAY_BUFFER, 0);
@@ -95,6 +98,27 @@ public class App implements GLEventListener {
         BufferUtils.destroyDirectBuffer(elementBuffer);
     }
 
+    private void initVertexArray(GL3 gl3) {
+
+        IntBuffer vertexArrayName = GLBuffers.newDirectIntBuffer(1);
+        gl3.glGenVertexArrays(1, vertexArrayName);
+
+        gl3.glBindVertexArray(vertexArrayName.get(0));
+
+        gl3.glBindBuffer(GL_ARRAY_BUFFER, bufferName.get(Buffer.VERTEX));
+        int stride = (2 + 3) * Float.BYTES;
+        int offset = 0;
+        gl3.glEnableVertexAttribArray(Semantic.Attr.POSITION);
+        gl3.glVertexAttribPointer(Semantic.Attr.POSITION, 2, GL_FLOAT, false, stride, offset);
+        offset = 2 * Float.BYTES;
+        gl3.glEnableVertexAttribArray(Semantic.Attr.COLOR);
+        gl3.glVertexAttribPointer(Semantic.Attr.COLOR, 3, GL_FLOAT, false, stride, offset);
+        gl3.glBindBuffer(GL_ARRAY_BUFFER, 0);
+
+        gl3.glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, bufferName.get(Buffer.ELEMENT));
+        gl3.glBindVertexArray(0);
+    }
+
     @Override
     public void init(GLAutoDrawable drawable) {
         System.out.println("Init");
@@ -102,6 +126,8 @@ public class App implements GLEventListener {
         GL3 gl3 = drawable.getGL().getGL3();
 
         initBuffers(gl3);
+
+        initVertexArray(gl3);
     }
 
     @Override
