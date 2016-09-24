@@ -9,8 +9,11 @@ import com.jogamp.opengl.GLAutoDrawable;
 import com.jogamp.opengl.GLCapabilities;
 import com.jogamp.opengl.GLEventListener;
 import com.jogamp.opengl.GLProfile;
+import com.jogamp.opengl.math.FloatUtil;
 import com.jogamp.opengl.util.Animator;
 import com.jogamp.opengl.util.GLBuffers;
+import com.jogamp.opengl.util.glsl.ShaderCode;
+import com.jogamp.opengl.util.glsl.ShaderProgram;
 import dvoraka.shaderstudio.examples.framework.BufferUtils;
 import dvoraka.shaderstudio.examples.framework.Semantic;
 
@@ -19,6 +22,8 @@ import java.nio.IntBuffer;
 import java.nio.ShortBuffer;
 
 import static com.jogamp.opengl.GL.*;
+import static com.jogamp.opengl.GL2ES2.GL_FRAGMENT_SHADER;
+import static com.jogamp.opengl.GL2ES2.GL_VERTEX_SHADER;
 
 /**
  * JOGL test App.
@@ -26,7 +31,13 @@ import static com.jogamp.opengl.GL.*;
 public class App implements GLEventListener {
 
     private IntBuffer bufferName = GLBuffers.newDirectIntBuffer(Buffer.MAX);
-
+    private IntBuffer vertexArrayName = GLBuffers.newDirectIntBuffer(1);
+    private int programName;
+    private long start;
+    private float[] scale = new float[16];
+    private float[] zRotazion = new float[16];
+    private int modelToClipMatrixUL;
+    private int elementSize;
 
     public static void main(String[] args) {
         App testApp = new App();
@@ -76,7 +87,7 @@ public class App implements GLEventListener {
         };
 
         int elementCount = 3;
-        int elementSize = elementCount * Short.BYTES;
+        elementSize = elementCount * Short.BYTES;
         short[] elementData = new short[]{
                 0, 2, 1
         };
@@ -119,6 +130,45 @@ public class App implements GLEventListener {
         gl3.glBindVertexArray(0);
     }
 
+    private void initProgram(GL3 gl3) {
+
+        String root = "shaders";
+        String name = "hello-triangle";
+
+        ShaderCode vertShader = ShaderCode.create(
+                gl3, GL_VERTEX_SHADER, this.getClass(), root,
+                null, name, "vert", null, true);
+        ShaderCode fragShader = ShaderCode.create(
+                gl3, GL_FRAGMENT_SHADER, this.getClass(), root,
+                null, name, "frag", null, true);
+
+        ShaderProgram shaderProgram = new ShaderProgram();
+        shaderProgram.add(vertShader);
+        shaderProgram.add(fragShader);
+
+        shaderProgram.init(gl3);
+
+        programName = shaderProgram.program();
+
+        /*
+         * These links don't go into effect until you link the program. If you
+         * want to change index, you need to link the program again.
+         */
+        gl3.glBindAttribLocation(programName, Semantic.Attr.POSITION, "position");
+        gl3.glBindAttribLocation(programName, Semantic.Attr.COLOR, "color");
+        gl3.glBindFragDataLocation(programName, Semantic.Frag.COLOR, "outputColor");
+
+        shaderProgram.link(gl3, System.out);
+        /*
+         * Take in account that JOGL offers a GLUniformData class, here we don't
+         * use it, but take a look to it since it may be interesting for you.
+         */
+        modelToClipMatrixUL = gl3.glGetUniformLocation(programName, "modelToClipMatrix");
+
+        vertShader.destroy(gl3);
+        fragShader.destroy(gl3);
+    }
+
     @Override
     public void init(GLAutoDrawable drawable) {
         System.out.println("Init");
@@ -126,22 +176,51 @@ public class App implements GLEventListener {
         GL3 gl3 = drawable.getGL().getGL3();
 
         initBuffers(gl3);
-
         initVertexArray(gl3);
+        initProgram(gl3);
+
+        gl3.glEnable(GL_DEPTH_TEST);
+
+        start = System.currentTimeMillis();
     }
 
     @Override
     public void dispose(GLAutoDrawable drawable) {
         System.out.println("Dispose");
+
+        GL3 gl3 = drawable.getGL().getGL3();
+        gl3.glDeleteProgram(programName);
+        gl3.glDeleteVertexArrays(1, vertexArrayName);
+        gl3.glDeleteBuffers(Buffer.MAX, bufferName);
+
         System.exit(0);
     }
 
     @Override
     public void display(GLAutoDrawable drawable) {
-//        System.out.println("Display");
-
         GL3 gl3 = drawable.getGL().getGL3();
-//        System.out.println(gl3.glGetError());
+
+        gl3.glClearColor(0f, .33f, 0.66f, 1f);
+        gl3.glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+        long now = System.currentTimeMillis();
+        float diff = (float) (now - start) / 1000;
+        /*
+         * Here we build the matrix that will multiply our original vertex
+         * positions. We scale, halving it, and rotate it.
+         */
+        scale = FloatUtil.makeScale(scale, true, 0.5f, 0.5f, 0.5f);
+        zRotazion = FloatUtil.makeRotationEuler(zRotazion, 0, 0, 0, diff);
+        float[] modelToClip = FloatUtil.multMatrix(scale, zRotazion);
+
+        gl3.glUseProgram(programName);
+        gl3.glBindVertexArray(vertexArrayName.get(0));
+
+        gl3.glUniformMatrix4fv(modelToClipMatrixUL, 1, false, modelToClip, 0);
+        gl3.glDrawElements(GL_TRIANGLES, elementSize, GL_UNSIGNED_SHORT, 0);
+
+        gl3.glBindVertexArray(0);
+        gl3.glUseProgram(0);
     }
 
     @Override
