@@ -34,8 +34,8 @@ public class App implements GLEventListener {
     private IntBuffer vertexArrayName = GLBuffers.newDirectIntBuffer(1);
     private int programName;
     private long start;
-    private float[] scale = new float[16];
-    private float[] zRotazion = new float[16];
+    private float[] scaleM = new float[16];
+    private float[] zRotationM = new float[16];
     private int modelToClipMatrixUL;
     private int elementSize;
 
@@ -206,24 +206,28 @@ public class App implements GLEventListener {
         gl3.glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
         long now = System.currentTimeMillis();
-        float diff = (float) (now - start) / 1000;
-        /*
-         * Here we build the matrix that will multiply our original vertex
-         * positions. We scale, halving it, and rotate it.
-         */
-        scale = FloatUtil.makeScale(scale, true, 0.5f, 0.5f, 0.5f);
-        zRotazion = FloatUtil.makeRotationEuler(zRotazion, 0, 0, 0, diff);
-        float[] modelToClip = FloatUtil.multMatrix(scale, zRotazion);
+        float delta = (float) (now - start) / 1000;
+        float[] modelToClip = FloatUtil.multMatrix(
+                scale(scaleM, 0.5f),
+                rotate(zRotationM, delta));
 
         gl3.glUseProgram(programName);
-        gl3.glBindVertexArray(vertexArrayName.get(0));
 
+        gl3.glBindVertexArray(vertexArrayName.get(0));
         gl3.glUniformMatrix4fv(modelToClipMatrixUL, 1, false, modelToClip, 0);
 //        gl3.glDrawElements(GL_TRIANGLES, elementSize, GL_UNSIGNED_SHORT, 0);
         gl3.glDrawArrays(GL_TRIANGLES, 0, 3);
 
         gl3.glBindVertexArray(0);
         gl3.glUseProgram(0);
+    }
+
+    public float[] scale(float[] matrix, float ratio) {
+        return FloatUtil.makeScale(matrix, true, ratio, ratio, ratio);
+    }
+
+    public float[] rotate(float[] matrix, float zRot) {
+        return FloatUtil.makeRotationEuler(matrix, 0, 0, 0, zRot);
     }
 
     @Override
