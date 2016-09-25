@@ -34,15 +34,16 @@ public class ShaderStudio extends JFrame {
         Animator animator = new Animator(glWindow);
         animator.start();
 
-        NewtCanvasAWT newtCanvasAWT = new NewtCanvasAWT(glWindow);
-
+        EditorArea editorArea = new EditorArea();
         JButton testButton = new JButton("TEST");
+        NewtCanvasAWT newtCanvasAWT = new NewtCanvasAWT(glWindow);
 
         Container pane = getContentPane();
         pane.setLayout(new FlowLayout());
 
-        pane.add(newtCanvasAWT);
+        pane.add(editorArea);
         pane.add(testButton);
+        pane.add(newtCanvasAWT);
     }
 
     public static void main(String[] args) {
