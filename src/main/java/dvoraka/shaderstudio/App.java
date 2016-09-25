@@ -30,7 +30,7 @@ import static com.jogamp.opengl.GL2ES2.GL_VERTEX_SHADER;
  */
 public class App implements GLEventListener {
 
-    private IntBuffer bufferName = GLBuffers.newDirectIntBuffer(Buffer.MAX);
+    private IntBuffer bufferName = GLBuffers.newDirectIntBuffer(Buffer.SIZE);
     private IntBuffer vertexArrayName = GLBuffers.newDirectIntBuffer(1);
     private int programName;
     private long start;
@@ -73,13 +73,14 @@ public class App implements GLEventListener {
         public static final int VERTEX = 0;
         public static final int ELEMENT = 1;
         public static final int TRANSFORM = 2;
-        public static final int MAX = 3;
+        public static final int SIZE = 3;
     }
 
     private void initBuffers(GL3 gl3) {
 
         int vertexCount = 3;
         int vertexSize = vertexCount * 5 * Float.BYTES;
+        // interleaved array - position and color
         float[] vertexData = new float[]{
                 -1, -1,/**/ 1, 0, 0,
                 +0, +2,/**/ 0, 0, 1,
@@ -88,6 +89,7 @@ public class App implements GLEventListener {
 
         int elementCount = 3;
         elementSize = elementCount * Short.BYTES;
+        // indices array
         short[] elementData = new short[]{
                 0, 2, 1
         };
@@ -95,7 +97,7 @@ public class App implements GLEventListener {
         FloatBuffer vertexBuffer = GLBuffers.newDirectFloatBuffer(vertexData);
         ShortBuffer elementBuffer = GLBuffers.newDirectShortBuffer(elementData);
 
-        gl3.glGenBuffers(Buffer.MAX, bufferName);
+        gl3.glGenBuffers(Buffer.SIZE, bufferName);
 
         gl3.glBindBuffer(GL_ARRAY_BUFFER, bufferName.get(Buffer.VERTEX));
         gl3.glBufferData(GL_ARRAY_BUFFER, vertexSize, vertexBuffer, GL_STATIC_DRAW);
@@ -191,7 +193,7 @@ public class App implements GLEventListener {
         GL3 gl3 = drawable.getGL().getGL3();
         gl3.glDeleteProgram(programName);
         gl3.glDeleteVertexArrays(1, vertexArrayName);
-        gl3.glDeleteBuffers(Buffer.MAX, bufferName);
+        gl3.glDeleteBuffers(Buffer.SIZE, bufferName);
 
         System.exit(0);
     }
@@ -200,7 +202,7 @@ public class App implements GLEventListener {
     public void display(GLAutoDrawable drawable) {
         GL3 gl3 = drawable.getGL().getGL3();
 
-        gl3.glClearColor(0f, .33f, 0.66f, 1f);
+        gl3.glClearColor(0f, .2f, 0.3f, 1f);
         gl3.glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
         long now = System.currentTimeMillis();
