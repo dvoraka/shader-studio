@@ -41,9 +41,13 @@ public class App implements GLEventListener {
 
     public static void main(String[] args) {
         App testApp = new App();
+        testApp.start();
     }
 
     public App() {
+    }
+
+    public void start() {
         Display display = NewtFactory.createDisplay(null);
         Screen screen = NewtFactory.createScreen(display, 0);
 
